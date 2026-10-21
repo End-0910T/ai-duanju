@@ -1,0 +1,54 @@
+name: Reassemble release assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reassemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v2026.10.21-son-engagement
+    steps:
+      - name: Download all release parts
+        run: |
+          mkdir -p parts output
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir parts \
+            --pattern 'son_engagement_full_project_20261021.zip.part-*' \
+            --pattern 'light_review_package_20261021.zip.part-*' \
+            --pattern 'visual_asset_handbook_20261021.pptx.part-*'
+
+      - name: Check part counts
+        run: |
+          test "$(find parts -maxdepth 1 -name 'son_engagement_full_project_20261021.zip.part-*' | wc -l)" -eq 99
+          test "$(find parts -maxdepth 1 -name 'light_review_package_20261021.zip.part-*' | wc -l)" -eq 6
+          test "$(find parts -maxdepth 1 -name 'visual_asset_handbook_20261021.pptx.part-*' | wc -l)" -eq 3
+
+      - name: Reassemble original files
+        run: |
+          LC_ALL=C cat parts/son_engagement_full_project_20261021.zip.part-* > output/son_engagement_full_project_20261021.zip
+          LC_ALL=C cat parts/light_review_package_20261021.zip.part-* > output/light_review_package_20261021.zip
+          LC_ALL=C cat parts/visual_asset_handbook_20261021.pptx.part-* > output/visual_asset_handbook_20261021.pptx
+
+      - name: Verify SHA-256
+        working-directory: output
+        run: |
+          printf '%s  %s\n' \
+            '641c0d2bd501576d61085fb12749db113458eb9166e8970c1b1deb31109f489d' \
+            'son_engagement_full_project_20261021.zip' \
+            '51cb2f6e69afa5f31682ee3673b221470224f100244166c9345847716c497455' \
+            'light_review_package_20261021.zip' \
+            'f9210fc0ef0b609e9c361f381739e41185b0972def0ca351ca97a4d22d09717b' \
+            'visual_asset_handbook_20261021.pptx' | sha256sum --check --strict
+
+      - name: Upload one-click files to the draft release
+        run: |
+          gh release upload "$RELEASE_TAG" output/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
