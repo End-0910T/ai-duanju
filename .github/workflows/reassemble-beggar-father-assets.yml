@@ -1,0 +1,61 @@
+name: Reassemble beggar-father release assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reassemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v2026.10.23-beggar-father
+      FULL_FILE: beggar_father_full_project_20261023.zip
+      REVIEW_FILE: beggar_father_review_package_20261023.zip
+    steps:
+      - name: Download temporary release parts
+        run: |
+          mkdir -p parts output
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir parts \
+            --pattern "${FULL_FILE}.part-*" \
+            --pattern "${REVIEW_FILE}.part-*"
+
+      - name: Check part counts
+        run: |
+          test "$(find parts -maxdepth 1 -name "${FULL_FILE}.part-*" | wc -l)" -eq 177
+          test "$(find parts -maxdepth 1 -name "${REVIEW_FILE}.part-*" | wc -l)" -eq 19
+
+      - name: Reassemble one-click archives
+        run: |
+          LC_ALL=C cat parts/${FULL_FILE}.part-* > output/$FULL_FILE
+          LC_ALL=C cat parts/${REVIEW_FILE}.part-* > output/$REVIEW_FILE
+
+      - name: Verify SHA-256 and ZIP integrity
+        working-directory: output
+        run: |
+          printf '%s  %s\n' \
+            'ed5384f3000bbbfa3b569f1ee684e785e5da21c37bbcf146d8ab50cb35214199' \
+            "$FULL_FILE" \
+            '0e66ceb8713144e7df1efe709746f8dfd0f0e02110c84527dc82728fea1b7960' \
+            "$REVIEW_FILE" | sha256sum --check --strict
+          unzip -tq "$FULL_FILE"
+          unzip -tq "$REVIEW_FILE"
+
+      - name: Upload final one-click files
+        run: |
+          gh release upload "$RELEASE_TAG" output/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Delete temporary parts
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[] | select(.name | test("\\.part-[0-9]+$")) | .apiUrl' \
+            | while read -r asset_url; do
+                gh api --method DELETE "$asset_url"
+              done
