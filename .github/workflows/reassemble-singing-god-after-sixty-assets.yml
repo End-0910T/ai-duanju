@@ -1,0 +1,68 @@
+name: Reassemble singing-god-after-sixty release assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reassemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v2026.10.28-singing-god-after-sixty
+      FULL_FILE: singing_god_after_sixty_full_archive_20261028.zip
+      PRODUCTION_FILE: singing_god_after_sixty_production_package_20261028.zip
+      REVIEW_FILE: singing_god_after_sixty_review_package_20261028.zip
+    steps:
+      - name: Download temporary release parts
+        run: |
+          mkdir -p parts output
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir parts \
+            --pattern "${FULL_FILE}.part-*" \
+            --pattern "${PRODUCTION_FILE}.part-*" \
+            --pattern "${REVIEW_FILE}.part-*"
+
+      - name: Check part counts
+        run: |
+          test "$(find parts -maxdepth 1 -name "${FULL_FILE}.part-*" | wc -l)" -eq 147
+          test "$(find parts -maxdepth 1 -name "${PRODUCTION_FILE}.part-*" | wc -l)" -eq 95
+          test "$(find parts -maxdepth 1 -name "${REVIEW_FILE}.part-*" | wc -l)" -eq 16
+
+      - name: Reassemble one-click archives
+        run: |
+          LC_ALL=C cat parts/${FULL_FILE}.part-* > output/$FULL_FILE
+          LC_ALL=C cat parts/${PRODUCTION_FILE}.part-* > output/$PRODUCTION_FILE
+          LC_ALL=C cat parts/${REVIEW_FILE}.part-* > output/$REVIEW_FILE
+
+      - name: Verify SHA-256 and ZIP integrity
+        working-directory: output
+        run: |
+          printf '%s  %s\n' \
+            '5c35b2ea7ccdb3f105406a77a6ef9aa70b33ec8b6e8c4287fabeb0bd3ad0e3c3' \
+            "$FULL_FILE" \
+            'a976dd5435ebd43462620e47dcece2cf2c3a74b27b71be0b1d3810bf27f1421f' \
+            "$PRODUCTION_FILE" \
+            '0112cfc5a127a2ea10b8330ff62521354ce3a0e6e9af288123a41b8c66f5c714' \
+            "$REVIEW_FILE" | sha256sum --check --strict
+          unzip -tq "$FULL_FILE"
+          unzip -tq "$PRODUCTION_FILE"
+          unzip -tq "$REVIEW_FILE"
+
+      - name: Upload final one-click files
+        run: |
+          gh release upload "$RELEASE_TAG" output/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Delete temporary parts
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[] | select(.name | test("\\.part-[0-9]+$")) | .apiUrl' \
+            | while read -r asset_url; do
+                gh api --method DELETE "$asset_url"
+              done
