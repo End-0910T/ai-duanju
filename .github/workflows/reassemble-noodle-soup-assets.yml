@@ -1,0 +1,68 @@
+name: Reassemble noodle-soup release assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reassemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v2026.11.01-noodle-soup
+      FULL_FILE: egg_clear_noodle_soup_full_archive_20261101.zip
+      PRODUCTION_FILE: egg_clear_noodle_soup_production_package_20261101.zip
+      REVIEW_FILE: egg_clear_noodle_soup_review_package_20261101.zip
+    steps:
+      - name: Download temporary release parts
+        run: |
+          mkdir -p parts output
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir parts \
+            --pattern "${FULL_FILE}.part-*" \
+            --pattern "${PRODUCTION_FILE}.part-*" \
+            --pattern "${REVIEW_FILE}.part-*"
+
+      - name: Check part counts
+        run: |
+          test "$(find parts -maxdepth 1 -name "${FULL_FILE}.part-*" | wc -l)" -eq 89
+          test "$(find parts -maxdepth 1 -name "${PRODUCTION_FILE}.part-*" | wc -l)" -eq 60
+          test "$(find parts -maxdepth 1 -name "${REVIEW_FILE}.part-*" | wc -l)" -eq 9
+
+      - name: Reassemble one-click archives
+        run: |
+          LC_ALL=C cat parts/${FULL_FILE}.part-* > output/$FULL_FILE
+          LC_ALL=C cat parts/${PRODUCTION_FILE}.part-* > output/$PRODUCTION_FILE
+          LC_ALL=C cat parts/${REVIEW_FILE}.part-* > output/$REVIEW_FILE
+
+      - name: Verify SHA-256 and ZIP integrity
+        working-directory: output
+        run: |
+          printf '%s  %s\n' \
+            'c1b83e0b269e16c1d67fba601cb4573468242fa326897c25d092eeb2a24075ee' \
+            "$FULL_FILE" \
+            'f9e188f4a41b9b27019275dae45d7b88418c867c6f340b1ceec760be4d6c7227' \
+            "$PRODUCTION_FILE" \
+            'a12efd71753846d96cdf50bc3f8fcb52010abfe5315578dc3dc602d19915a99e' \
+            "$REVIEW_FILE" | sha256sum --check --strict
+          unzip -tq "$FULL_FILE"
+          unzip -tq "$PRODUCTION_FILE"
+          unzip -tq "$REVIEW_FILE"
+
+      - name: Upload final one-click files
+        run: |
+          gh release upload "$RELEASE_TAG" output/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Delete temporary parts
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[] | select(.name | test("\\.part-[0-9]+$")) | .apiUrl' \
+            | while read -r asset_url; do
+                gh api --method DELETE "$asset_url"
+              done
