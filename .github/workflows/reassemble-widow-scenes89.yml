@@ -1,0 +1,36 @@
+name: Reassemble widow scenes 89 delivery
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v2026.11.03-widow-scenes89
+      ZIP_FILE: widow_scenes_only_89_20261103.zip
+      XLSX_FILE: widow_scenes89_embedded_20261103.xlsx
+    steps:
+      - name: Download temporary parts
+        run: |
+          mkdir -p parts output
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir parts --pattern '*.part-*'
+          test "$(find parts -name "${ZIP_FILE}.part-*" | wc -l)" -eq 23
+          test "$(find parts -name "${XLSX_FILE}.part-*" | wc -l)" -eq 2
+      - name: Assemble and verify
+        run: |
+          LC_ALL=C cat parts/${ZIP_FILE}.part-* > output/$ZIP_FILE
+          LC_ALL=C cat parts/${XLSX_FILE}.part-* > output/$XLSX_FILE
+          cd output
+          printf '%s  %s\n' 'bdcf3f94a09aa963e197d64ab2f5fab50e7191752fa27f9678d63395f3b7494a' "$ZIP_FILE" '3b5c81e8c09fa0ace81c4a8e4cd4bab3be2adb01357730cd411324e6bfd4efb9' "$XLSX_FILE" | sha256sum --check --strict
+          unzip -tq "$ZIP_FILE"
+          unzip -tq "$XLSX_FILE"
+          test "$(unzip -Z1 "$ZIP_FILE" | wc -l)" -eq 89
+          test "$(unzip -Z1 "$XLSX_FILE" | grep -c '^xl/media/')" -eq 89
+      - name: Upload final files
+        run: gh release upload "$RELEASE_TAG" output/* --repo "$GITHUB_REPOSITORY" --clobber
+      - name: Remove temporary parts
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[] | select(.name | test("\\.part-[0-9]+$")) | .apiUrl' | while read -r asset_url; do gh api --method DELETE "$asset_url"; done
