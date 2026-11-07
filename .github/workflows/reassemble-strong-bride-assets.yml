@@ -1,0 +1,57 @@
+name: Reassemble strong bride complete assets
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v2026.11.07-strong-bride
+    steps:
+      - name: Download manifest and temporary parts
+        run: |
+          mkdir -p parts output
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir parts --pattern 'release-manifest.json' --pattern '*.part-*'
+      - name: Assemble and verify exact files
+        shell: python
+        run: |
+          import hashlib, json, pathlib, zipfile
+          root=pathlib.Path('parts');output=pathlib.Path('output')
+          records=json.loads((root/'release-manifest.json').read_text())
+          assert len(records)==4
+          for r in records:
+              name=r['name']
+              assert pathlib.Path(name).name==name
+              parts=sorted(root.glob(name+'.part-*'))
+              assert [p.name for p in parts]==[name+f'.part-{i:03d}' for i in range(r['parts'])]
+              target=output/name;digest=hashlib.sha256();size=0
+              with target.open('wb') as dest:
+                  for part in parts:
+                      with part.open('rb') as src:
+                          for block in iter(lambda:src.read(1048576),b''):
+                              dest.write(block);digest.update(block);size+=len(block)
+              assert size==r['bytes'] and digest.hexdigest()==r['sha256'],name
+              with zipfile.ZipFile(target) as z:
+                  assert z.testzip() is None,name
+                  if 'scenes_only' in name:
+                      assert len(z.namelist())==200 and all(n.endswith('.png') for n in z.namelist())
+                  if name.endswith('.xlsx'):
+                      assert len([n for n in z.namelist() if n.startswith('xl/media/')])==385
+              print('PASS',name,size,digest.hexdigest())
+      - name: Upload the four complete downloads
+        run: gh release upload "$RELEASE_TAG" output/* --repo "$GITHUB_REPOSITORY"
+      - name: Remove only this delivery's verified temporary parts
+        shell: python
+        run: |
+          import json,os,pathlib,subprocess
+          records=json.loads(pathlib.Path('parts/release-manifest.json').read_text())
+          valid={r['name']+f'.part-{i:03d}' for r in records for i in range(r['parts'])}
+          repo=os.environ['GITHUB_REPOSITORY'];tag=os.environ['RELEASE_TAG']
+          assets=json.loads(subprocess.check_output(['gh','release','view',tag,'--repo',repo,'--json','assets']))['assets']
+          for a in assets:
+              if a['name'] in valid:
+                  subprocess.run(['gh','api','--method','DELETE',a['apiUrl']],check=True)
+          print('Removed verified transport chunks; complete downloads retained.')
