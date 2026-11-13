@@ -11,6 +11,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: v2026.11.13-stepson-choice
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Download manifest and temporary parts
         run: |
           mkdir -p parts output
@@ -22,6 +25,7 @@ jobs:
           root=pathlib.Path('parts');output=pathlib.Path('output')
           records=json.loads((root/'release-manifest.json').read_text());assert len(records)==4
           for r in records:
+              if r.get('transport')=='derived':continue
               name=r['name'];assert pathlib.Path(name).name==name
               parts=sorted(root.glob(name+'.part-*'))
               assert [p.name for p in parts]==[name+f'.part-{i:03d}' for i in range(r['parts'])]
@@ -37,6 +41,8 @@ jobs:
                   if 'scenes_only' in name:assert len(z.namelist())==304 and all(n.endswith('.png') for n in z.namelist())
                   if name.endswith('.xlsx'):assert len([n for n in z.namelist() if n.startswith('xl/media/')])==566
               print('PASS',name,size,digest.hexdigest())
+      - name: Derive and verify the three companion downloads
+        run: python .github/scripts/derive-stepson-choice-packages.py --manifest parts/release-manifest.json --archive-dir output --output-dir output
       - name: Upload the four complete downloads
         run: gh release upload "$RELEASE_TAG" output/* --repo "$GITHUB_REPOSITORY"
       - name: Remove only this delivery's verified temporary parts
