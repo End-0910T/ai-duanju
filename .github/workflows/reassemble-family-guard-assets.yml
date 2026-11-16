@@ -39,13 +39,32 @@ jobs:
       - name: Derive and verify scene archive review archive and embedded catalog
         run: python .github/scripts/derive-family-guard-packages.py --manifest parts/release-manifest.json --archive-dir output --output-dir output
       - name: Upload four complete downloads without publishing the draft
-        run: gh release upload "$RELEASE_TAG" output/* --repo "$GITHUB_REPOSITORY"
+        shell: python
+        run: |
+          import json,os,pathlib,re,subprocess
+          records=json.loads(pathlib.Path('parts/release-manifest.json').read_text());dest=pathlib.Path('upload');dest.mkdir(exist_ok=True)
+          repo=os.environ['GITHUB_REPOSITORY'];tag=os.environ['RELEASE_TAG']
+          assets={a['name']:a for a in json.loads(subprocess.check_output(['gh','release','view',tag,'--repo',repo,'--json','assets']))['assets']}
+          for r in records:
+              name=r['cloud_name'];assert re.fullmatch(r'[a-z0-9_.]+',name)
+              if name in assets:
+                  assert assets[name]['size']==r['bytes'];continue
+              target=dest/name;os.link(pathlib.Path('output')/r['name'],target)
+              subprocess.run(['gh','release','upload',tag,str(target),'--repo',repo],check=True)
+          print('Four uniquely named complete downloads uploaded')
       - name: Remove only this delivery's verified temporary parts
         shell: python
         run: |
           import json,os,pathlib,subprocess
           records=json.loads(pathlib.Path('parts/release-manifest.json').read_text());valid={r['part_prefix']+f'.part-{i:03d}' for r in records for i in range(r['parts'])}
           repo=os.environ['GITHUB_REPOSITORY'];tag=os.environ['RELEASE_TAG'];assets=json.loads(subprocess.check_output(['gh','release','view',tag,'--repo',repo,'--json','assets']))['assets']
+          releases=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases?per_page=100']))
+          release=next(r for r in releases if r['tag_name']==tag);assert release['draft'] is True
+          actual=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases/{release["id"]}/assets?per_page=100']))
+          by={a['name']:a for a in actual}
+          for r in records:
+              a=by[r['cloud_name']];assert a['size']==r['bytes'] and a['digest']=='sha256:'+r['sha256'],r['cloud_name']
+          print('Four cloud sizes and SHA256 digests verified before cleanup')
           for a in assets:
               if a['name'] in valid:subprocess.run(['gh','api','--method','DELETE',a['apiUrl']],check=True)
           print('Verified transport parts removed; complete downloads retained')
