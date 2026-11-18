@@ -65,6 +65,6 @@ jobs:
           for r in records:
               a=by[r['cloud_name']];assert a['size']==r['bytes'] and a['digest']=='sha256:'+r['sha256'],r['cloud_name']
           print('Four cloud sizes and SHA256 digests verified before cleanup')
-          for a in assets:
-              if a['name'] in valid:subprocess.run(['gh','api','--method','DELETE',a['apiUrl']],check=True)
+          for a in actual:
+              if a['name'] in valid:subprocess.run(['gh','api','--method','DELETE',a['url']],check=True)
           print('Verified transport parts removed; complete downloads retained')
