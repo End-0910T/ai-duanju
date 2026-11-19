@@ -1,0 +1,68 @@
+{
+  "status": "PASS",
+  "draft": true,
+  "release_url": "https://github.com/End-0910T/ai-duanju/releases/tag/untagged-9b6d27ae2622a864eec7",
+  "workflow": {
+    "conclusion": "success",
+    "headSha": "cd8d9006b7de6b0c197946a2c7d2ef1500aac190",
+    "status": "completed",
+    "url": "https://github.com/End-0910T/ai-duanju/actions/runs/44519229296"
+  },
+  "assets": [
+    {
+      "kind": "full_project",
+      "name": "pillow_partner_full_project_20261119.zip",
+      "transport": "parts",
+      "bytes": 1608336436,
+      "sha256": "dfbca3a3dc0995d6438b1378d33e0eb67e4fdd2ae86d81c4e8960e2b4eaa5019",
+      "cloud_name": "pillow_partner_full_project_20261119.zip",
+      "parts": 256,
+      "part_prefix": "pillow_partner_full_project_20261119.zip",
+      "status": "PASS",
+      "browser_download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-9b6d27ae2622a864eec7/pillow_partner_full_project_20261119.zip",
+      "cloud_digest": "sha256:dfbca3a3dc0995d6438b1378d33e0eb67e4fdd2ae86d81c4e8960e2b4eaa5019"
+    },
+    {
+      "kind": "all_images",
+      "name": "pillow_partner_all_images_20261119.zip",
+      "transport": "derived",
+      "bytes": 1146677657,
+      "sha256": "5354e1b0b0c039786992884bff6d01f733dc7765cd879f921cbcc2cf118c05f7",
+      "cloud_name": "pillow_partner_all_images_20261119.zip",
+      "parts": 0,
+      "part_prefix": "pillow_partner_all_images_20261119.zip",
+      "status": "PASS",
+      "browser_download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-9b6d27ae2622a864eec7/pillow_partner_all_images_20261119.zip",
+      "cloud_digest": "sha256:5354e1b0b0c039786992884bff6d01f733dc7765cd879f921cbcc2cf118c05f7"
+    },
+    {
+      "kind": "catalog",
+      "name": "pillow_partner_asset_catalog_20261119.xlsx",
+      "transport": "derived",
+      "bytes": 21378716,
+      "sha256": "077c1854feb2fea2d2b3afd239f01c635e8e820a484439936b06b8dea7b8547c",
+      "cloud_name": "pillow_partner_asset_catalog_20261119.xlsx",
+      "parts": 0,
+      "part_prefix": "pillow_partner_asset_catalog_20261119.xlsx",
+      "status": "PASS",
+      "browser_download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-9b6d27ae2622a864eec7/pillow_partner_asset_catalog_20261119.xlsx",
+      "cloud_digest": "sha256:077c1854feb2fea2d2b3afd239f01c635e8e820a484439936b06b8dea7b8547c"
+    },
+    {
+      "kind": "review",
+      "name": "pillow_partner_review_20261119.zip",
+      "transport": "derived",
+      "bytes": 132480067,
+      "sha256": "2be7769829ce101810065592548c284e4e5ac6fac7d641ec6affeeb15d7d6f43",
+      "cloud_name": "pillow_partner_review_20261119.zip",
+      "parts": 0,
+      "part_prefix": "pillow_partner_review_20261119.zip",
+      "status": "PASS",
+      "browser_download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-9b6d27ae2622a864eec7/pillow_partner_review_20261119.zip",
+      "cloud_digest": "sha256:2be7769829ce101810065592548c284e4e5ac6fac7d641ec6affeeb15d7d6f43"
+    }
+  ],
+  "release_asset_count": 7,
+  "temporary_parts_remaining": 0,
+  "temporary_transport_branch_removed": true
+}

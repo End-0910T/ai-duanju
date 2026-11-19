@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "project": "妻子的枕边人不是我",
+  "source_sha256": "e7562939d43f2899d6fd8bd2805b6a3fbaaadf5211dbe082103abacc9154e0dd",
+  "chapter_sections": 61,
+  "raw_scene_headers": 146,
+  "atomic_scene_segments": 187,
+  "character_templates": 33,
+  "wardrobes": 52,
+  "physical_spaces": 55,
+  "scene_states": 88,
+  "props": 112,
+  "vfx": 6,
+  "native_images": 574,
+  "image_counts": {
+    "wardrobe": 104,
+    "scene": 352,
+    "prop": 112,
+    "vfx": 6
+  },
+  "embedded_workbook_images": 574,
+  "workbook_sheets": 8,
+  "presentation_pages": 201,
+  "presentation_image_instances": 574,
+  "all_current_native_hashes_visually_reviewed": true,
+  "actual_native_dimensions": [
+    "1671x941",
+    "1672x941"
+  ],
+  "catalog_sha256": "077c1854feb2fea2d2b3afd239f01c635e8e820a484439936b06b8dea7b8547c",
+  "handbook_sha256": "729994200ab5cefcef6259c7a60cdc9c9b93585bf7d6be03cee344a513fa87c1",
+  "scope": "二维静态视觉资产，特效为四阶段外观参考，不含动画、三维、音频或成片。款色和空间方位为美术提案，不声称实测尺寸。"
+}

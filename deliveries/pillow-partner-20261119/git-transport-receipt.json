@@ -1,0 +1,11 @@
+{
+  "status": "CLEANED",
+  "branch": "assets-transfer/pillow-partner-20261119",
+  "commit": "3c0f544146b28ef893ba9a99d7e4c42ace2a9771",
+  "tree": "5656b9555740ac4a05d8d7e9736484876cda5af0",
+  "parts": 256,
+  "chunk_bytes": 6291456,
+  "total_bytes": 1608336436,
+  "sha256": "dfbca3a3dc0995d6438b1378d33e0eb67e4fdd2ae86d81c4e8960e2b4eaa5019",
+  "branch_removed": true
+}
