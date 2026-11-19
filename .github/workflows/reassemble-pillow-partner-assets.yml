@@ -1,6 +1,11 @@
 name: Reassemble Pillow Partner complete assets
 on:
   workflow_dispatch:
+    inputs:
+      transport_ref:
+        description: Temporary transport branch; leave empty for release parts
+        required: false
+        default: ''
 permissions:
   contents: write
 jobs:
@@ -15,9 +20,24 @@ jobs:
         with:
           persist-credentials: false
       - name: Download manifest and verified temporary transport parts
+        if: ${{ inputs.transport_ref == '' }}
         run: |
           mkdir -p parts output
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir parts --pattern 'release-manifest.json' --pattern '*.part-*'
+      - name: Checkout temporary transport branch
+        if: ${{ inputs.transport_ref != '' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.transport_ref }}
+          path: parts
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Prepare output and upload download metadata
+        run: |
+          mkdir -p output
+          if [ -f parts/DOWNLOAD_GUIDE.md ]; then
+            gh release upload "$RELEASE_TAG" parts/DOWNLOAD_GUIDE.md parts/release-manifest.json parts/SHA256SUMS_RELEASE.txt --repo "$GITHUB_REPOSITORY" --clobber
+          fi
       - name: Assemble and verify the complete project
         shell: python
         run: |
