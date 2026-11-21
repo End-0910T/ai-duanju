@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "full_project",
+    "name": "needle_beggar_full_project_20261121.zip",
+    "cloud_name": "needle_beggar_full_project_20261121.zip",
+    "bytes": 1553033626,
+    "sha256": "639d501d2b3769d8dd5fe7b80996d442fa8524d5949c54dd053046760746a7cf"
+  },
+  {
+    "kind": "all_images",
+    "name": "needle_beggar_images_only_20261121.zip",
+    "cloud_name": "needle_beggar_images_only_20261121.zip",
+    "bytes": 843370936,
+    "sha256": "48f1f2e3963463d0801e5aea36600ab9d7bbc792c7a34c09d5164390111d3b0a"
+  },
+  {
+    "kind": "catalog",
+    "name": "needle_beggar_catalog_20261121.xlsx",
+    "cloud_name": "needle_beggar_catalog_20261121.xlsx",
+    "bytes": 51389431,
+    "sha256": "5329e980f774623ed3bc2ef78da97d73fee3b63c16b785fbdade4978179f87dd"
+  },
+  {
+    "kind": "review",
+    "name": "needle_beggar_review_20261121.zip",
+    "cloud_name": "needle_beggar_review_20261121.zip",
+    "bytes": 129935421,
+    "sha256": "615494ce6b42bff76589e3cb07b68add3064259d1beffc802cab75f239b41f97"
+  }
+]

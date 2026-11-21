@@ -1,0 +1,58 @@
+{
+  "result": "PASS",
+  "verified_at": "2026-11-21T05:00:15.886347+00:00",
+  "repository": "End-0910T/ai-duanju",
+  "release_id": 453445784,
+  "requested_tag": "v2026.11.21-needle-beggar",
+  "actual_draft_tag": "untagged-cf8dcac7bb6f913587fd",
+  "release_url": "https://github.com/End-0910T/ai-duanju/releases/tag/untagged-cf8dcac7bb6f913587fd",
+  "draft": true,
+  "workflow_run_url": "https://github.com/End-0910T/ai-duanju/actions/runs/44868252401",
+  "files": [
+    {
+      "kind": "full_project",
+      "name": "needle_beggar_full_project_20261121.zip",
+      "bytes": 1553033626,
+      "sha256": "639d501d2b3769d8dd5fe7b80996d442fa8524d5949c54dd053046760746a7cf",
+      "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-cf8dcac7bb6f913587fd/needle_beggar_full_project_20261121.zip",
+      "asset_id": 774474739
+    },
+    {
+      "kind": "all_images",
+      "name": "needle_beggar_images_only_20261121.zip",
+      "bytes": 843370936,
+      "sha256": "48f1f2e3963463d0801e5aea36600ab9d7bbc792c7a34c09d5164390111d3b0a",
+      "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-cf8dcac7bb6f913587fd/needle_beggar_images_only_20261121.zip",
+      "asset_id": 774476731
+    },
+    {
+      "kind": "catalog",
+      "name": "needle_beggar_catalog_20261121.xlsx",
+      "bytes": 51389431,
+      "sha256": "5329e980f774623ed3bc2ef78da97d73fee3b63c16b785fbdade4978179f87dd",
+      "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-cf8dcac7bb6f913587fd/needle_beggar_catalog_20261121.xlsx",
+      "asset_id": 774477632
+    },
+    {
+      "kind": "review",
+      "name": "needle_beggar_review_20261121.zip",
+      "bytes": 129935421,
+      "sha256": "615494ce6b42bff76589e3cb07b68add3064259d1beffc802cab75f239b41f97",
+      "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-cf8dcac7bb6f913587fd/needle_beggar_review_20261121.zip",
+      "asset_id": 774477728
+    }
+  ],
+  "metadata_count": 3,
+  "total_original_png": 392,
+  "counts": {
+    "character_boards": 60,
+    "scene_views": 232,
+    "props": 80,
+    "vfx_static_boards": 20
+  },
+  "workbook_embedded_images": 392,
+  "presentation_pages": 287,
+  "temporary_recovery_key_removed": true,
+  "temporary_transport_branch_removed": true,
+  "local_temporary_key_and_cipher_removed": true
+}
