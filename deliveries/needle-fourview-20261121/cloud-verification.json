@@ -1,0 +1,47 @@
+{
+  "result": "PASS_WITH_TWO_UNGENERATED_EXCEPTIONS",
+  "verified_at": "2026-11-21T07:08:45.322369+00:00",
+  "repository": "End-0910T/ai-duanju",
+  "release_id": 453508343,
+  "release_url": "https://github.com/End-0910T/ai-duanju/releases/tag/untagged-9f140396bcbdcb742dc2",
+  "draft": true,
+  "workflow_run_url": "https://github.com/End-0910T/ai-duanju/actions/runs/44878716265",
+  "files": [
+    {
+      "kind": "full_project",
+      "name": "needle_beggar_characters_fourview_20261121.zip",
+      "bytes": 273178170,
+      "sha256": "a802b8b38ac8c13dc24318db3f6f31b18634036c539a5a6228278c6d1060177f",
+      "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-9f140396bcbdcb742dc2/needle_beggar_characters_fourview_20261121.zip",
+      "asset_id": 774753497
+    },
+    {
+      "kind": "all_images",
+      "name": "needle_beggar_characters_fourview_images_20261121.zip",
+      "bytes": 105576552,
+      "sha256": "059203d20213955ba5e5f60a6592b2eee57a513bc9bd39ad43d657863835b766",
+      "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-9f140396bcbdcb742dc2/needle_beggar_characters_fourview_images_20261121.zip",
+      "asset_id": 774753993
+    },
+    {
+      "kind": "catalog",
+      "name": "needle_beggar_characters_fourview_catalog_20261121.xlsx",
+      "bytes": 4614090,
+      "sha256": "4a3ecedc9a79605d9564cecdfb840c0e3a63f38fd28f16937caabd2eca389155",
+      "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-9f140396bcbdcb742dc2/needle_beggar_characters_fourview_catalog_20261121.xlsx",
+      "asset_id": 774754281
+    }
+  ],
+  "metadata_count": 3,
+  "expected_items": 60,
+  "new_completed_png": 58,
+  "blocked_unchanged_items": [
+    "WDR-009",
+    "WDR-010"
+  ],
+  "workbook_embedded_new_images": 58,
+  "old_project_png_unchanged": 392,
+  "temporary_recovery_key_removed": true,
+  "temporary_transport_branch_removed": true,
+  "local_recovery_key_and_cipher_removed": true
+}
