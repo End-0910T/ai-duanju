@@ -1,0 +1,80 @@
+name: Reassemble Needle Beggar complete assets
+on:
+  workflow_dispatch:
+    inputs:
+      transport_ref:
+        description: Temporary encrypted transport branch
+        required: true
+        default: assets-transfer/needle-beggar-20261121
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: v2026.11.21-needle-beggar
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.transport_ref }}
+          path: parts
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify encrypted parts and recover the complete archive
+        shell: python
+        run: |
+          import hashlib,json,os,pathlib,re,subprocess,zipfile
+          root=pathlib.Path('parts');output=pathlib.Path('output');output.mkdir(exist_ok=True)
+          records=json.loads((root/'release-manifest.json').read_text());assert len(records)==4
+          r=next(x for x in records if x['kind']=='full_project');assert r['encryption']=='AES-256-CTR'
+          prefix=r['part_prefix'];assert pathlib.Path(prefix).name==prefix and pathlib.Path(r['name']).name==r['name']
+          pieces=sorted(root.glob(prefix+'.part-*'));assert [p.name for p in pieces]==[prefix+f'.part-{i:03d}' for i in range(r['parts'])]
+          cipher=pathlib.Path('encrypted.aes');digest=hashlib.sha256();size=0
+          with cipher.open('wb') as dest:
+              for piece in pieces:
+                  with piece.open('rb') as src:
+                      for block in iter(lambda:src.read(1048576),b''):dest.write(block);digest.update(block);size+=len(block)
+          assert size==r['bytes'] and digest.hexdigest()==r['cipher_sha256']
+          release=json.loads(subprocess.check_output(['gh','release','view',os.environ['RELEASE_TAG'],'--repo',os.environ['GITHUB_REPOSITORY'],'--json','body,isDraft']))
+          assert release['isDraft'] is True
+          m=re.search(r'<!-- needle-transport-key:([a-f0-9]{64}):([a-f0-9]{32}) -->',release['body']);assert m
+          key,iv=m.groups();print('::add-mask::'+key);print('::add-mask::'+iv)
+          target=output/r['name'];result=subprocess.run(['openssl','enc','-d','-aes-256-ctr','-K',key,'-iv',iv,'-in',str(cipher),'-out',str(target)],capture_output=True)
+          assert result.returncode==0,'Transport decryption failed'
+          h=hashlib.sha256()
+          with target.open('rb') as f:
+              for b in iter(lambda:f.read(1048576),b''):h.update(b)
+          assert target.stat().st_size==r['bytes'] and h.hexdigest()==r['sha256']
+          with zipfile.ZipFile(target) as z:assert z.testzip() is None
+          cipher.unlink();print('FULL PROJECT SHA256 PASS',r['sha256'])
+      - name: Derive and verify all complete downloads
+        run: python .github/scripts/derive-needle-beggar-packages.py --manifest parts/release-manifest.json --archive-dir output --output-dir output
+      - name: Upload complete files and metadata into the draft
+        shell: python
+        run: |
+          import json,os,pathlib,re,subprocess
+          records=json.loads(pathlib.Path('parts/release-manifest.json').read_text());repo=os.environ['GITHUB_REPOSITORY'];tag=os.environ['RELEASE_TAG']
+          assets={a['name']:a for a in json.loads(subprocess.check_output(['gh','release','view',tag,'--repo',repo,'--json','assets']))['assets']}
+          for r in records:
+              name=r['cloud_name'];assert re.fullmatch(r'[a-z0-9_.]+',name)
+              if name in assets:assert assets[name]['size']==r['bytes'];continue
+              subprocess.run(['gh','release','upload',tag,str(pathlib.Path('output')/r['name']),'--repo',repo],check=True)
+          subprocess.run(['gh','release','upload',tag,'parts/release-manifest.json','parts/DOWNLOAD_GUIDE.md','parts/SHA256SUMS_RELEASE.txt','--repo',repo,'--clobber'],check=True)
+      - name: Verify cloud digests and remove the temporary recovery key
+        shell: python
+        run: |
+          import json,os,pathlib,re,subprocess
+          repo=os.environ['GITHUB_REPOSITORY'];tag=os.environ['RELEASE_TAG'];records=json.loads(pathlib.Path('parts/release-manifest.json').read_text())
+          releases=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases?per_page=100']));release=next(r for r in releases if r['tag_name']==tag);assert release['draft'] is True
+          assets=[a for page in json.loads(subprocess.check_output(['gh','api','--paginate','--slurp',f'repos/{repo}/releases/{release["id"]}/assets?per_page=100'])) for a in page];by={a['name']:a for a in assets}
+          for r in records:
+              a=by[r['cloud_name']];assert a['size']==r['bytes'] and a['digest']=='sha256:'+r['sha256'],r['cloud_name']
+          assert len(assets)==7 and not any('.part-' in a['name'] for a in assets)
+          body=re.sub(r'\n?<!-- needle-transport-key:[a-f0-9]{64}:[a-f0-9]{32} -->\n?','',release['body'])
+          result=subprocess.run(['gh','api',f'repos/{repo}/releases/{release["id"]}','--method','PATCH','--input','-'],input=json.dumps({'body':body}),capture_output=True,text=True);assert result.returncode==0,'Cannot clear temporary key'
+          print('Four complete downloads and three metadata files verified; temporary key removed; draft preserved')
