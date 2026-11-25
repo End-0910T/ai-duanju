@@ -1,0 +1,34 @@
+[
+  {
+    "kind": "full_project",
+    "name": "ganshan_yangjia_full_project_20261125.zip",
+    "bytes": 1607658834,
+    "sha256": "87b2a48d31294f45e1db6b43fce34c47a8e63c6d407c77d3559ae7c29d5c3cbb",
+    "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-b9b5e0d0c2215e4bcc2d/ganshan_yangjia_full_project_20261125.zip",
+    "asset_id": 790025498
+  },
+  {
+    "kind": "all_images",
+    "name": "ganshan_yangjia_images_only_20261125.zip",
+    "bytes": 870030628,
+    "sha256": "f662f2cba7020504d15fa443fc7fcc76fdf740e42dc097d52c090b4dbfb73bca",
+    "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-b9b5e0d0c2215e4bcc2d/ganshan_yangjia_images_only_20261125.zip",
+    "asset_id": 790027638
+  },
+  {
+    "kind": "catalog",
+    "name": "ganshan_yangjia_catalog_20261125.xlsx",
+    "bytes": 61456823,
+    "sha256": "afd971223355388cb40e7f00b3027db9ec060f7b94f41f77664dd19a1e1d17b4",
+    "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-b9b5e0d0c2215e4bcc2d/ganshan_yangjia_catalog_20261125.xlsx",
+    "asset_id": 790028390
+  },
+  {
+    "kind": "review",
+    "name": "ganshan_yangjia_review_20261125.zip",
+    "bytes": 174847210,
+    "sha256": "13f7c2fbcd3df4e124baeea29c480f73016ad0d7e9cc1d3c600c920541103735",
+    "download_url": "https://github.com/End-0910T/ai-duanju/releases/download/untagged-b9b5e0d0c2215e4bcc2d/ganshan_yangjia_review_20261125.zip",
+    "asset_id": 790028486
+  }
+]
