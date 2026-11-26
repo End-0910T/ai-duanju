@@ -1,0 +1,114 @@
+name: Assemble Toushiyan women's asset revision
+on:
+  workflow_dispatch:
+    inputs:
+      transport_commit:
+        description: Encrypted revision commit
+        required: true
+      release_id:
+        description: Draft release ID
+        required: true
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_ID: ${{ inputs.release_id }}
+      TRANSPORT_COMMIT: ${{ inputs.transport_commit }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Validate release and revision inputs
+        shell: python
+        run: |
+          import os,re
+          assert re.fullmatch(r'\d+',os.environ['RELEASE_ID'])
+          assert re.fullmatch('[0-9a-f]{40}',os.environ['TRANSPORT_COMMIT'])
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ inputs.transport_commit }}
+          path: parts
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify revision transfer and restore replacement files
+        shell: python
+        run: |
+          import pathlib,subprocess,os,re,hashlib,json,shutil
+          root=pathlib.Path('parts')
+          t=json.loads((root/'transport.json').read_text());assert t['part_prefix']=='toushiyan-women-20261126'
+          names=[root/(t['part_prefix']+f'.part-{i:03}') for i in range(t['parts'])]
+          assert all(p.is_file() for p in names)
+          def sha(p):
+              d=hashlib.sha256()
+              with p.open('rb') as f:
+                  for block in iter(lambda:f.read(1048576),b''):d.update(block)
+              return d.hexdigest()
+          enc=pathlib.Path('overlay.aes')
+          with enc.open('wb') as out:
+              for p in names:
+                  with p.open('rb') as src:shutil.copyfileobj(src,out,1048576)
+          assert enc.stat().st_size==t['bytes'] and sha(enc)==t['cipher_sha256'] and t['encryption']=='AES-256-CTR'
+          repo=os.environ['GITHUB_REPOSITORY'];rid=os.environ['RELEASE_ID']
+          release=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases/{rid}']))
+          assert release['draft'] and release['tag_name']=='toushiyan-women-20261126'
+          assert release['name']=='人到六十觉醒透视眼，水电工也能逆袭｜女性角色修订版'
+          m=re.search(r'<!-- toushiyan-women-key:([a-f0-9]{64}):([a-f0-9]{32}) -->',release['body'])
+          assert m
+          k,v=m.groups();print('::add-mask::'+k);print('::add-mask::'+v)
+          p=pathlib.Path('overlay.zip')
+          dec=subprocess.run(['openssl','enc','-d','-aes-256-ctr','-K',k,'-iv',v,'-in',str(enc),'-out',str(p)],capture_output=True)
+          assert dec.returncode==0 and p.stat().st_size==t['bytes'] and sha(p)==t['sha256']
+          enc.unlink()
+      - name: Retrieve the original approved archive
+        shell: python
+        run: |
+          import hashlib,json,os,pathlib,subprocess
+          repo=os.environ['GITHUB_REPOSITORY']
+          uri=f'repos/{repo}/releases/assets/794143697'
+          a=json.loads(subprocess.check_output(['gh','api',uri]))
+          expected='9da72974d7dbfacdcfba2f2bb670861662897d4c5cd138f17238ba84d14217bd'
+          assert a['digest']=='sha256:'+expected and a['size']==1114679378
+          out=pathlib.Path('original.zip')
+          with out.open('wb') as f:
+              subprocess.run(['gh','api',uri,'-H','Accept: application/octet-stream'],stdout=f,check=True)
+          if out.stat().st_size!=a['size']:
+              subprocess.run(['gh','release','download','toushiyan-20261126','--repo',repo,'--pattern',a['name'],'--output',str(out),'--clobber'],check=True)
+          h=hashlib.sha256()
+          with out.open('rb') as f:
+              for b in iter(lambda:f.read(1048576),b''):h.update(b)
+          assert out.stat().st_size==a['size'] and h.hexdigest()==expected
+      - name: Build and check the full project and focused downloads
+        run: python .github/scripts/derive-toushiyan-women.py --base original.zip --overlay overlay.zip --manifest parts/release-manifest.json --out output
+      - name: Upload verified downloads to the new draft
+        shell: python
+        run: |
+          import json,os,pathlib,re,subprocess
+          repo=os.environ['GITHUB_REPOSITORY'];rid=os.environ['RELEASE_ID'];records=json.loads(pathlib.Path('parts/release-manifest.json').read_text())
+          release=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases/{rid}']))
+          assert release['draft'] and release['tag_name']=='toushiyan-women-20261126'
+          tag=release['tag_name'];assets={a['name']:a for a in release['assets']}
+          for r in records:
+              name=r['cloud_name'];assert re.fullmatch(r'[a-z0-9_.]+',name)
+              if name in assets:
+                  a=assets[name];assert a['size']==r['bytes'] and a['digest']=='sha256:'+r['sha256'];continue
+              subprocess.run(['gh','release','upload',tag,'output/'+name,'--repo',repo],check=True)
+          subprocess.run(['gh','release','upload',tag,'parts/release-manifest.json','parts/DOWNLOAD_GUIDE.md','parts/SHA256SUMS_RELEASE.txt','--repo',repo,'--clobber'],check=True)
+      - name: Confirm upload and clear recovery material
+        shell: python
+        run: |
+          import json,os,pathlib,re,subprocess
+          repo=os.environ['GITHUB_REPOSITORY'];rid=os.environ['RELEASE_ID'];records=json.loads(pathlib.Path('parts/release-manifest.json').read_text())
+          release=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases/{rid}']))
+          assert release['draft'] and release['tag_name']=='toushiyan-women-20261126'
+          assets={a['name']:a for a in json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases/{rid}/assets?per_page=100']))}
+          assert len(assets)==6
+          for r in records:
+              a=assets[r['cloud_name']];assert a['size']==r['bytes'] and a['state']=='uploaded' and a['digest']=='sha256:'+r['sha256']
+          body=re.sub(r'\n?<!-- toushiyan-women-key:[a-f0-9]{64}:[a-f0-9]{32} -->\n?','',release['body'])
+          u=subprocess.run(['gh','api',f'repos/{repo}/releases/{rid}','--method','PATCH','--input','-'],input=json.dumps({'body':body}),text=True,capture_output=True)
+          assert u.returncode==0
+          print('New release downloads and metadata verified')
